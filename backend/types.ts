@@ -10,3 +10,11 @@ export const SigninUserSchema = z.object({
     password: z.string()
 })
 
+export const OnrampSchema = z.object({
+    usd: z.number()
+})
+
+export const DepositSchema = z.object({
+    ticker: z.string(),
+    qty: z.string()
+})

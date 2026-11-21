@@ -1,0 +1,366 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.Stockbalance",
+    "label": "Create table \"Stockbalance\"",
+    "summary": "Creates table \"Stockbalance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Stockbalance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Stockbalance\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Stockbalance\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Stockbalance\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Stockbalance\"",
+        "sql": "CREATE TABLE \"public\".\"Stockbalance\" (\n  \"id\" SERIAL NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Stockbalance\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"Stockbalance\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Stockbalance\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.Stocks",
+    "label": "Create table \"Stocks\"",
+    "summary": "Creates table \"Stocks\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Stocks"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Stocks\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Stocks\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Stocks\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Stocks\"",
+        "sql": "CREATE TABLE \"public\".\"Stocks\" (\n  \"available\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"locked\" int4 NOT NULL,\n  \"stockBalanceID\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Stocks\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"Stocks\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Stocks\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.User",
+    "label": "Create table \"User\"",
+    "summary": "Creates table \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"User\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"User\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"User\"",
+        "sql": "CREATE TABLE \"public\".\"User\" (\n  \"available\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"locked\" int4 NOT NULL,\n  \"password\" text NOT NULL,\n  \"username\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"User\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"User\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"User\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "unique.Stockbalance.Stockbalance_userId_key",
+    "label": "Add unique constraint on \"Stockbalance\" (userId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Stockbalance_userId_key",
+        "table": "Stockbalance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Stockbalance_userId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Stockbalance_userId_key",
+          "public",
+          "\"public\".\"Stockbalance\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"Stockbalance_userId_key\" on \"Stockbalance\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Stockbalance_userId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Stockbalance\" ADD CONSTRAINT \"Stockbalance_userId_key\" UNIQUE (\"userId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"Stockbalance_userId_key\" exists on (userId)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "Stockbalance_userId_key",
+          "public",
+          "\"public\".\"Stockbalance\"",
+          "u",
+          "[\"userId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Stocks.Stocks_stockBalanceID_key",
+    "label": "Add unique constraint on \"Stocks\" (stockBalanceID)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Stocks_stockBalanceID_key",
+        "table": "Stocks"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Stocks_stockBalanceID_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Stocks_stockBalanceID_key",
+          "public",
+          "\"public\".\"Stocks\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"Stocks_stockBalanceID_key\" on \"Stocks\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Stocks_stockBalanceID_key\"",
+        "sql": "ALTER TABLE \"public\".\"Stocks\" ADD CONSTRAINT \"Stocks_stockBalanceID_key\" UNIQUE (\"stockBalanceID\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"Stocks_stockBalanceID_key\" exists on (stockBalanceID)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "Stocks_stockBalanceID_key",
+          "public",
+          "\"public\".\"Stocks\"",
+          "u",
+          "[\"stockBalanceID\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Stockbalance.Stockbalance_userId_fkey",
+    "label": "Add foreign key \"Stockbalance_userId_fkey\" on \"Stockbalance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Stockbalance_userId_fkey",
+        "table": "Stockbalance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Stockbalance_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Stockbalance_userId_fkey",
+          "public",
+          "\"public\".\"Stockbalance\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"Stockbalance_userId_fkey\" on \"Stockbalance\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Stockbalance_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Stockbalance\"\nADD CONSTRAINT \"Stockbalance_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"User\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Stockbalance_userId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "Stockbalance_userId_fkey",
+          "public",
+          "\"public\".\"Stockbalance\"",
+          "f",
+          "[\"userId\"]",
+          "\"public\".\"User\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Stocks.Stocks_stockBalanceID_fkey",
+    "label": "Add foreign key \"Stocks_stockBalanceID_fkey\" on \"Stocks\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Stocks_stockBalanceID_fkey",
+        "table": "Stocks"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Stocks_stockBalanceID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Stocks_stockBalanceID_fkey",
+          "public",
+          "\"public\".\"Stocks\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"Stocks_stockBalanceID_fkey\" on \"Stocks\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Stocks_stockBalanceID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Stocks\"\nADD CONSTRAINT \"Stocks_stockBalanceID_fkey\"\nFOREIGN KEY (\"stockBalanceID\")\nREFERENCES \"public\".\"Stockbalance\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Stocks_stockBalanceID_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "Stocks_stockBalanceID_fkey",
+          "public",
+          "\"public\".\"Stocks\"",
+          "f",
+          "[\"stockBalanceID\"]",
+          "\"public\".\"Stockbalance\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  }
+]

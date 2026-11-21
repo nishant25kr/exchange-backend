@@ -1,0 +1,32 @@
+model User {
+  id            Int          @id @default(autoincrement())
+  username      String       @unique
+  password      String
+
+  available     BigInt       @default(0)      
+  locked        BigInt       @default(0)
+
+  stockBalance  Stockbalance?
+}
+
+model Stockbalance {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+
+  user      User     @relation(fields: [userId], references: [id])
+  stocks    Stocks[]
+}
+
+model Stocks {
+  id              Int          @id @default(autoincrement())
+  symbol          String
+
+  available       BigInt       @default(0)      
+  locked          BigInt       @default(0)      
+
+  stockBalanceID  Int
+  stockBalance    Stockbalance @relation(fields: [stockBalanceID], references: [id])
+
+  @@unique([stockBalanceID, symbol])
+  @@index([symbol])
+}
