@@ -98,7 +98,7 @@ app.post("/onramp", middleware, async (req, res) => {
             amount: parsedData.data.usd
         }
     }))
-    console.log('res',response)
+    cjonsole.log('res',response)
 
     return res.status(200).json({
         message: "Onramp completed"

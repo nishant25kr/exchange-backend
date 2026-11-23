@@ -8,7 +8,6 @@ export const middleware = async (req: Request, res: Response, next: NextFunction
     try {
         const user = jwt.verify(token,JWT_SECRET) as JwtPayload;
         
-        console.log(user)
         if(!user){
             throw new Error("Incorrect token")
         }
