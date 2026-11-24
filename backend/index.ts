@@ -93,12 +93,13 @@ app.post("/onramp", middleware, async (req, res) => {
     }
     
     const response = await client.lPush("engine-queue", JSON.stringify({
+        type : "onramp",
         payload: {
             userId: (req as any).user.id,
             amount: parsedData.data.usd
         }
     }))
-    cjonsole.log('res',response)
+    console.log('res',response)
 
     return res.status(200).json({
         message: "Onramp completed"
