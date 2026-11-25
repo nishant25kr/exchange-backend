@@ -1,22 +1,19 @@
 import z from "zod"
 
-export const IncomingQueueMessageSchema = z.union(
-    [
-        z.object({
-            type: z.string(),
-            payload: z.object({
-                userId: z.number(),
-                amount: z.number()
-            })
-        }),
-        z.object({
-            type: z.string(),
-            payload: z.object({
-                userId: z.number(),
-                amount: z.number()
-            })
-        }),
-    ]
-)
- 
+export const OnrampIncomingMessageSchema = z.object({
+    type: z.string(),
+    payload: z.object({
+        userId: z.number(),
+        amount: z.number()
+    })
+})
+
+const DepositeIncomingMessageSchema = z.object({
+    type: z.string(),
+    payload: z.object({
+        userId: z.number(),
+        ticker: z.string(),
+        qty: z.number()
+    })
+})
 

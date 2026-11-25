@@ -4,7 +4,6 @@ import { JWT_SECRET } from "./config";
 
 export const middleware = async (req: Request, res: Response, next: NextFunction) => {
     const token = (req.headers.authorization)?.split(" ")[1] as string
-    console.log("hii",token)
     try {
         const user = jwt.verify(token,JWT_SECRET) as JwtPayload;
         

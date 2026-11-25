@@ -11,10 +11,14 @@ export const SigninUserSchema = z.object({
 })
 
 export const OnrampSchema = z.object({
-    usd: z.number()
+    usd: z.number(),
+    return_queue: z.string(),
+    callbackId: z.number()
 })
 
 export const DepositSchema = z.object({
     ticker: z.string(),
-    qty: z.string()
+    qty: z.string(),
+    return_queue: z.string(),
+    callbackId: z.number()
 })

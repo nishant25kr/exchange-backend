@@ -1,12 +1,16 @@
 import { createClient } from 'redis'
-import { IncomingQueueMessageSchema } from './types';
 
 const client = createClient();
 
+const sendClinet = createClient()
+sendClinet.connect()
+
 const USER_USD_BALANCES: Record<number, number> = {};
-const STOCK_BALANCES : Record<string, Record<string, number>> =  {};
+const STOCK_BALANCES: Record<string, Record<string, number>> = {};
+
 setInterval(() => {
-    console.log(USER_USD_BALANCES)
+    console.log("USD:", USER_USD_BALANCES)
+    console.log("Stock:", STOCK_BALANCES)
 }, 2000);
 
 client.connect()
@@ -16,26 +20,55 @@ client.connect()
             if (!value) {
                 continue;
             }
-            const data = JSON.parse(value.element) 
-            
-            const parsedData = IncomingQueueMessageSchema.safeParse(data)
-            
-            console.log(parsedData)
-            if(parsedData.success){
-                console.log("hello")
-                if(parsedData.data.type == "onramp"){
-                    const userId = parsedData.data.payload.userId;
-                    if(!USER_USD_BALANCES[userId]){
-                        USER_USD_BALANCES[userId] = 0;
-                    }
-                    USER_USD_BALANCES[userId] += parsedData.data.payload.amount
+            const parsedData = JSON.parse(value.element)
+
+            console.log("hello")
+            if (parsedData.type == "onramp") {
+                
+                const userId = parsedData.payload.userId;
+                if (!USER_USD_BALANCES[userId]) {
+                    USER_USD_BALANCES[userId] = 0;
                 }
-                if(parsedData.data.type == "deposit"){
-                    const userId = parsedData.data.payload.userId;
-                    const ticker = parsedData.data.payload.ticker;
+                USER_USD_BALANCES[userId] += parsedData.payload.amount
+
+                const return_queue = parsedData.payload.return_queue
+
+                await sendClinet.lPush(`${return_queue}`, JSON.stringify({
+                    balance: USER_USD_BALANCES[userId],
+                    callbackId : parsedData.payload.callbackId
+                }))
+
+            }
+
+            if (parsedData.type == "deposit") {
+                const userId = parsedData.payload.userId;
+                const ticker = parsedData.payload.ticker;
+                const qty = parsedData.payload.qty
+                if (!STOCK_BALANCES[userId]) {
+                    STOCK_BALANCES[userId] = {}
                 }
-            }else{
-                continue;
+
+                if (!STOCK_BALANCES[userId][ticker]) {
+                    (STOCK_BALANCES[userId]!)[ticker] = 0;
+                }
+                (STOCK_BALANCES[userId]!)[ticker] += qty;
+
+            }
+
+            if (parsedData.type == "get_balances") {
+                const userId = parsedData.userId
+                const balance = USER_USD_BALANCES[userId];
+                console.log(balance)
+
+                const return_queue = parsedData.queue
+
+                sendClinet.lPush(return_queue, JSON.stringify({
+                    balance: balance,
+                    callback: parsedData.callbackId
+                }))
+
+
+
             }
         }
     })

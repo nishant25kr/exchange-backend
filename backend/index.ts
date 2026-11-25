@@ -9,12 +9,10 @@ import { db } from './src/prisma/db';
 
 const client = createClient();
 client.connect()
+
 const prisma = db.orm.public
 const app = express()
 app.use(express.json())
-const pool = new Pool({
-    connectionString: DATABASE_URL
-})
 
 app.post("/signup", async (req, res) => {
     const parsedData = CreateUserSchema.safeParse(req.body)
@@ -92,15 +90,25 @@ app.post("/onramp", middleware, async (req, res) => {
         })
     }
     
-    const response = await client.lPush("engine-queue", JSON.stringify({
+    await client.lPush("engine-queue", JSON.stringify({
         type : "onramp",
         payload: {
             userId: (req as any).user.id,
-            amount: parsedData.data.usd
+            amount: parsedData.data.usd,
+            return_queue: parsedData.data.return_queue,
+            callbackId: parsedData.data.callbackId
         }
     }))
-    console.log('res',response)
-
+    
+    while (true) {
+        console.log("inside")
+        const value = await client.brPop("response_queue",5000)
+        if(!value) continue;
+        const data = JSON.parse(value.element)
+        console.log(data);
+        break;
+    }
+    
     return res.status(200).json({
         message: "Onramp completed"
     })
@@ -113,6 +121,7 @@ app.post("/deposit", middleware, async (req, res) => {
             message: "Validation failed"
         })
     }
+    
 
     try {
         await client.lPush("engine-queue", JSON.stringify({
@@ -120,7 +129,9 @@ app.post("/deposit", middleware, async (req, res) => {
             payload: {
                 userId: (req as any).user.id,
                 qty: parsedData.data.qty,
-                ticker: parsedData.data.ticker
+                ticker: parsedData.data.ticker,
+                return_queue: parsedData.data.return_queue,
+                callbackId: parsedData.data.callbackId
             }
         }))
     } catch (error) {
