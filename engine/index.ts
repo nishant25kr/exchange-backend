@@ -6,7 +6,7 @@ const sendClinet = createClient()
 sendClinet.connect()
 
 const USER_USD_BALANCES: Record<number, number> = {};
-const STOCK_BALANCES: Record<string, Record<string, number>> = {};
+const STOCK_BALANCES: Record<number, Record<string, number>> = {};
 
 setInterval(() => {
     console.log("USD:", USER_USD_BALANCES)
