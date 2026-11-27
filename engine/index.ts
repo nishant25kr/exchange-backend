@@ -21,8 +21,9 @@ client.connect()
                 continue;
             }
             const parsedData = JSON.parse(value.element)
-
+            console.log(parsedData)
             console.log("hello")
+
             if (parsedData.type == "onramp") {
                 
                 const userId = parsedData.payload.userId;
@@ -31,19 +32,15 @@ client.connect()
                 }
                 USER_USD_BALANCES[userId] += parsedData.payload.amount
 
-                const return_queue = parsedData.payload.return_queue
-
-                await sendClinet.lPush(`${return_queue}`, JSON.stringify({
-                    balance: USER_USD_BALANCES[userId],
-                    callbackId : parsedData.payload.callbackId
-                }))
-
+                await sendClinet.HSET(String(parsedData.payload.callbackId), {USD: USER_USD_BALANCES[userId]})
             }
 
             if (parsedData.type == "deposit") {
                 const userId = parsedData.payload.userId;
                 const ticker = parsedData.payload.ticker;
                 const qty = parsedData.payload.qty
+                const return_queue = parsedData.payload.return_queue
+
                 if (!STOCK_BALANCES[userId]) {
                     STOCK_BALANCES[userId] = {}
                 }
@@ -53,22 +50,21 @@ client.connect()
                 }
                 (STOCK_BALANCES[userId]!)[ticker] += qty;
 
+                await sendClinet.HSET(String(parsedData.payload.callbackId), STOCK_BALANCES[userId])
             }
 
             if (parsedData.type == "get_balances") {
-                const userId = parsedData.userId
-                const balance = USER_USD_BALANCES[userId];
+                console.log("inside")
+                console.log(parsedData)
+                const userId = parsedData.payload.userId
+                let balance;
+                if(!USER_USD_BALANCES[userId]){
+                    balance = 0
+                }else{
+                    balance =  USER_USD_BALANCES[userId]
+                }
                 console.log(balance)
-
-                const return_queue = parsedData.queue
-
-                sendClinet.lPush(return_queue, JSON.stringify({
-                    balance: balance,
-                    callback: parsedData.callbackId
-                }))
-
-
-
+                await sendClinet.HSET(String(parsedData.payload.callbackId), { USD: balance })
             }
         }
     })

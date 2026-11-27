@@ -1,6 +1,5 @@
 import express, { Router } from 'express';
-import { Pool } from "pg"
-import { CreateUserSchema, DepositSchema, OnrampSchema, SigninUserSchema } from './types';
+import { CreateUserSchema, DepositSchema, GetBalanceSchema, OnrampSchema, SigninUserSchema } from './types';
 import { DATABASE_URL, JWT_SECRET } from './config';
 import jwt from "jsonwebtoken"
 import { middleware } from './middleware';
@@ -49,7 +48,6 @@ app.post("/signup", async (req, res) => {
 
 app.post("/signin", async (req, res) => {
     const parsedData = SigninUserSchema.safeParse(req.body)
-    console.log("HELLO THERE")
     if (!parsedData.success) {
         return res.status(411).json({
             message: "Validation failed"
@@ -89,9 +87,9 @@ app.post("/onramp", middleware, async (req, res) => {
             message: "Validation failed"
         })
     }
-    
+
     await client.lPush("engine-queue", JSON.stringify({
-        type : "onramp",
+        type: "onramp",
         payload: {
             userId: (req as any).user.id,
             amount: parsedData.data.usd,
@@ -99,29 +97,29 @@ app.post("/onramp", middleware, async (req, res) => {
             callbackId: parsedData.data.callbackId
         }
     }))
-    
+
+    let result
     while (true) {
-        console.log("inside")
-        const value = await client.brPop("response_queue",5000)
-        if(!value) continue;
-        const data = JSON.parse(value.element)
-        console.log(data);
+        const value = await client.HGETALL(String(parsedData.data.callbackId))
+        if (Object.keys(value).length == 0) continue;
+        await client.DEL(String(parsedData.data.callbackId))
+        result = value
         break;
     }
-    
+
     return res.status(200).json({
-        message: "Onramp completed"
+        message: "Onramp completed",
+        result
     })
 })
 
-app.post("/deposit", middleware, async (req, res) => {
+app.post("/deposite", middleware, async (req, res) => {
     const parsedData = DepositSchema.safeParse(req.body)
     if (!parsedData.success) {
         return res.status(411).json({
             message: "Validation failed"
         })
     }
-    
 
     try {
         await client.lPush("engine-queue", JSON.stringify({
@@ -134,6 +132,19 @@ app.post("/deposit", middleware, async (req, res) => {
                 callbackId: parsedData.data.callbackId
             }
         }))
+        let result
+        while (true) {
+            const value = await client.HGETALL(String(parsedData.data.callbackId))
+            if (Object.keys(value).length == 0) continue;
+            await client.DEL(String(parsedData.data.callbackId))
+            result = value
+            break;
+        }
+
+        return res.status(200).json({
+            message: "Deposite success",
+            result
+        })
     } catch (error) {
         return res.status(403).json({
             message: "Error while deposite"
@@ -141,12 +152,56 @@ app.post("/deposit", middleware, async (req, res) => {
     }
 })
 
-app.get("/",(req,res) =>{
+app.post("/getbalance", middleware, async (req, res) => {
+
+    const parsedData = GetBalanceSchema.safeParse(req.body);
+    if (!parsedData.success) {
+        return res.status(200).json({
+            message: "Validation failed"
+        })
+    }
+
+    try {
+        console.log('hello1')
+        await client.lPush("engine-queue", JSON.stringify({
+            type: "get_balances",
+            payload: {
+                userId: (req as any).user.id,
+                callbackId: parsedData.data.callbackId
+            }
+        }))
+        console.log('hello2')
+        let result;
+        
+        console.log('hello3',parsedData.data.callbackId)
+        while (true) {
+            const value = await client.HGETALL(String(parsedData.data.callbackId))
+            if (Object.keys(value).length == 0) continue;
+            console.log(value)
+            
+            result = value;
+            break;
+        }
+
+        return res.status(200).json({
+            message: "balance fetch successfully",
+            result
+        })
+
+    } catch (error) {
+        res.status(411).json({
+            message: "Something went wrong"
+        })
+    }
+
+})
+
+app.get("/", (req, res) => {
     res.status(200).json({
-        message:"Hello there"
+        message: "Hello there"
     })
 })
 
-app.listen(3000,()=>{
+app.listen(3000, () => {
     console.log("hello from server")
 })

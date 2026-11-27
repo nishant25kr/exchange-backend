@@ -17,8 +17,13 @@ export const OnrampSchema = z.object({
 })
 
 export const DepositSchema = z.object({
-    ticker: z.string(),
-    qty: z.string(),
+    qty: z.number(),
     return_queue: z.string(),
-    callbackId: z.number()
+    callbackId: z.number(),
+    ticker: z.string(),
+})
+
+
+export const GetBalanceSchema = z.object({
+    callbackId : z.number()
 })
